@@ -22,35 +22,40 @@ package de.featjar.analysis.sat4j;
 
 import de.featjar.clauses.Clauses;
 import de.featjar.clauses.LiteralList;
-import de.featjar.clauses.solutions.analysis.SolutionUpdater;
+import de.featjar.clauses.solutions.analysis.ConfigurationUpdater;
 import de.featjar.formula.ModelRepresentation;
 import de.featjar.formula.structure.Formula;
 import de.featjar.formula.structure.atomic.Assignment;
 import de.featjar.formula.structure.atomic.literal.VariableMap;
 import de.featjar.util.data.Pair;
+import de.featjar.util.job.NullMonitor;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
-public class ConfigurationCompletor implements SolutionUpdater {
-    private final ConfigurationGenerator generator;
+public class RandomConfigurationUpdater implements ConfigurationUpdater {
+    private final RandomConfigurationGenerator generator;
     private final ModelRepresentation model;
 
-    public ConfigurationCompletor(ModelRepresentation model, ConfigurationGenerator generator) {
-        this.generator = generator;
+    public RandomConfigurationUpdater(ModelRepresentation model, Random random) {
         this.model = model;
+        generator = new FastRandomConfigurationGenerator();
+        generator.setAllowDuplicates(true);
+        generator.setRandom(random);
+        generator.init(model.getCache(), new NullMonitor());
     }
 
     @Override
     public Optional<LiteralList> update(LiteralList partialSolution) {
         final de.featjar.analysis.mig.CoreDeadAnalysis analysis = new de.featjar.analysis.mig.CoreDeadAnalysis();
         analysis.setFixedFeatures(partialSolution.getLiterals(), partialSolution.size());
-        // TODO return empty for contradicting partial configuration
-        return Optional.of(partialSolution.addAll(model.get(analysis)));
+        final LiteralList otherLiterals = model.get(analysis);
+        return otherLiterals == null ? Optional.empty() : Optional.of(partialSolution.addAll(otherLiterals));
     }
 
     @Override
-    public Optional<LiteralList> complete(LiteralList partialSolution, LiteralList... excludeClauses) {
-        if (partialSolution == null && excludeClauses.length == 0) {
+    public Optional<LiteralList> complete(LiteralList partialSolution, List<LiteralList> excludeClauses) {
+        if (partialSolution == null && excludeClauses.isEmpty()) {
             return Optional.ofNullable(generator.get());
         }
         final LiteralList result;
