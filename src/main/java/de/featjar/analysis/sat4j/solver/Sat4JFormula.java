@@ -123,7 +123,10 @@ public class Sat4JFormula extends AbstractDynamicFormula<IConstr> {
         for (int i = 0; i < count; i++) {
             final IConstr lastConstraint = removeConstraint(constraints.size() - 1);
             if (lastConstraint != null) {
-                sat4jSolver.solver.removeSubsumedConstr(lastConstraint);
+                try {
+                    sat4jSolver.solver.removeSubsumedConstr(lastConstraint);
+                } catch (IllegalArgumentException e) {
+                }
             }
         }
         sat4jSolver.solver.clearLearntClauses();
