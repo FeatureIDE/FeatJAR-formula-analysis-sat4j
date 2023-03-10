@@ -20,6 +20,7 @@
  */
 package de.featjar.analysis.sat4j;
 
+import de.featjar.analysis.solver.RuntimeContradictionException;
 import de.featjar.clauses.Clauses;
 import de.featjar.clauses.LiteralList;
 import de.featjar.clauses.solutions.analysis.ConfigurationUpdater;
@@ -47,8 +48,10 @@ public class RandomConfigurationUpdater implements ConfigurationUpdater {
 
     @Override
     public Optional<LiteralList> update(LiteralList partialSolution) {
-        final de.featjar.analysis.mig.CoreDeadAnalysis analysis = new de.featjar.analysis.mig.CoreDeadAnalysis();
-        analysis.setFixedFeatures(partialSolution.getLiterals(), partialSolution.size());
+        final CoreDeadAnalysis analysis = new CoreDeadAnalysis();
+        for (int l : partialSolution.getLiterals()) {
+            analysis.getAssumptions().set(Math.abs(l), l > 0);
+        }
         final LiteralList otherLiterals = model.get(analysis);
         return otherLiterals == null ? Optional.empty() : Optional.of(partialSolution.addAll(otherLiterals));
     }
@@ -58,7 +61,6 @@ public class RandomConfigurationUpdater implements ConfigurationUpdater {
         if (partialSolution == null && excludeClauses.isEmpty()) {
             return Optional.ofNullable(generator.get());
         }
-        final LiteralList result;
         final Assignment assumptions = generator.getAssumptions();
         final List<Pair<Integer, Object>> oldAssumptions = assumptions.getAll();
 
@@ -72,15 +74,17 @@ public class RandomConfigurationUpdater implements ConfigurationUpdater {
         for (LiteralList clause : excludeClauses) {
             assumedConstraints.add(Clauses.toOrClause(clause.negate(), variables));
         }
-        generator.updateAssumptions();
-
-        result = generator.get();
-
-        generator.resetAssumptions();
-        assumptions.unsetAll();
-        assumptions.setAll(oldAssumptions);
-        assumedConstraints.clear();
-        generator.updateAssumptions();
-        return Optional.ofNullable(result);
+        try {
+            generator.updateAssumptions();
+            return Optional.ofNullable(generator.get());
+        } catch (RuntimeContradictionException e) {
+            return Optional.empty();
+        } finally {
+            generator.resetAssumptions();
+            assumptions.unsetAll();
+            assumptions.setAll(oldAssumptions);
+            assumedConstraints.clear();
+            generator.updateAssumptions();
+        }
     }
 }

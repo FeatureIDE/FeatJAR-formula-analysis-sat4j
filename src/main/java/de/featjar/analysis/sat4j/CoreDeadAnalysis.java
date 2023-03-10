@@ -222,7 +222,7 @@ public class CoreDeadAnalysis extends AVariableAnalysis<LiteralList> {
             }
         }
 
-        return new LiteralList(solver.getAssumptions()
-                .asArray(initialAssignmentLength, solver.getAssumptions().size()));
+        return new LiteralList(
+                solver.getAssumptions().asArray(0, solver.getAssumptions().size()));
     }
 }
