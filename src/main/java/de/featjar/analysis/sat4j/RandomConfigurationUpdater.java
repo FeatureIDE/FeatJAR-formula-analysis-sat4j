@@ -20,9 +20,13 @@
  */
 package de.featjar.analysis.sat4j;
 
+import de.featjar.analysis.sat4j.solver.Sat4JSolver;
 import de.featjar.analysis.solver.RuntimeContradictionException;
+import de.featjar.clauses.CNF;
+import de.featjar.clauses.CNFProvider;
 import de.featjar.clauses.Clauses;
 import de.featjar.clauses.LiteralList;
+import de.featjar.clauses.LiteralList.Order;
 import de.featjar.clauses.solutions.analysis.ConfigurationUpdater;
 import de.featjar.formula.ModelRepresentation;
 import de.featjar.formula.structure.Formula;
@@ -30,6 +34,9 @@ import de.featjar.formula.structure.atomic.Assignment;
 import de.featjar.formula.structure.atomic.literal.VariableMap;
 import de.featjar.util.data.Pair;
 import de.featjar.util.job.NullMonitor;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -57,8 +64,9 @@ public class RandomConfigurationUpdater implements ConfigurationUpdater {
     }
 
     @Override
-    public Optional<LiteralList> complete(LiteralList partialSolution, List<LiteralList> excludeClauses) {
-        if (partialSolution == null && excludeClauses.isEmpty()) {
+    public Optional<LiteralList> complete(LiteralList partialSolution, Collection<LiteralList> excludeClauses) {
+    	excludeClauses = excludeClauses != null ? excludeClauses : Collections.emptyList();
+    	if (partialSolution == null && excludeClauses.isEmpty()) {
             return Optional.ofNullable(generator.get());
         }
         final Assignment assumptions = generator.getAssumptions();
@@ -85,6 +93,46 @@ public class RandomConfigurationUpdater implements ConfigurationUpdater {
             assumptions.setAll(oldAssumptions);
             assumedConstraints.clear();
             generator.updateAssumptions();
+        }
+    }
+
+    @Override
+    public Optional<LiteralList> choose(Collection<LiteralList> clauses) {
+        if (clauses.isEmpty()) {
+            return Optional.ofNullable(generator.get());
+        }
+        LiteralList merge = LiteralList.merge(clauses, model.getVariables().getVariableCount());
+
+        CNF modelCnf = model.getCache().get(CNFProvider.fromFormula()).get();
+        VariableMap variables = new VariableMap(modelCnf.getVariableMap());
+        CNF cnf = new CNF(variables, modelCnf.getClauses());
+
+        int[] newNegativeLiterals = new int[clauses.size()];
+        int i = 0;
+        for (LiteralList clause : clauses) {
+            int newVar = variables.addBooleanVariable().getIndex();
+            newNegativeLiterals[i++] = -newVar;
+
+            for (int l : clause.getLiterals()) {
+                cnf.addClause(new LiteralList(new int[] {l, newVar}, Order.UNORDERED, false));
+            }
+        }
+        cnf.addClause(new LiteralList(newNegativeLiterals, Order.UNORDERED, false));
+        cnf.addClause(merge.negate());
+        try {
+            RandomConfigurationGenerator generator = new FastRandomConfigurationGenerator();
+            // TODO return list?
+            generator.setAllowDuplicates(true);
+            generator.setRandom(this.generator.getRandom());
+            generator.setSolver(new Sat4JSolver(cnf));
+            LiteralList literalList = generator.get();
+
+            return literalList == null //
+                    ? Optional.empty()
+                    : Optional.of(new LiteralList(Arrays.copyOf(
+                            literalList.getLiterals(), modelCnf.getVariableMap().getVariableCount())));
+        } catch (RuntimeContradictionException e) {
+            return Optional.empty();
         }
     }
 }
