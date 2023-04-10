@@ -333,7 +333,8 @@ public abstract class AbstractSat4JSolver<T extends ISolver> implements Solution
 
     protected void configureSolver() {
         solver.setTimeoutMs(1_000_000);
-        solver.setDBSimplificationAllowed(true);
+        // TODO allow for non-modifiable solvers
+        solver.setDBSimplificationAllowed(false);
         solver.setKeepSolverHot(true);
         solver.setVerbose(false);
     }
