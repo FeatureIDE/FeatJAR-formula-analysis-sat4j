@@ -20,8 +20,10 @@
  */
 package de.featjar.analysis.sat4j;
 
+import de.featjar.analysis.sat4j.solver.SStrategy;
 import de.featjar.analysis.sat4j.solver.Sat4JSolver;
 import de.featjar.analysis.solver.RuntimeContradictionException;
+import de.featjar.analysis.solver.SatSolver.SatResult;
 import de.featjar.clauses.CNF;
 import de.featjar.clauses.CNFProvider;
 import de.featjar.clauses.Clauses;
@@ -44,9 +46,11 @@ import java.util.Random;
 public class RandomConfigurationUpdater implements ConfigurationUpdater {
     private final RandomConfigurationGenerator generator;
     private final ModelRepresentation model;
+    private final Random random;
 
     public RandomConfigurationUpdater(ModelRepresentation model, Random random) {
         this.model = model;
+        this.random = random;
         generator = new FastRandomConfigurationGenerator();
         generator.setAllowDuplicates(true);
         generator.setRandom(random);
@@ -65,8 +69,8 @@ public class RandomConfigurationUpdater implements ConfigurationUpdater {
 
     @Override
     public Optional<LiteralList> complete(LiteralList partialSolution, Collection<LiteralList> excludeClauses) {
-    	excludeClauses = excludeClauses != null ? excludeClauses : Collections.emptyList();
-    	if (partialSolution == null && excludeClauses.isEmpty()) {
+        excludeClauses = excludeClauses != null ? excludeClauses : Collections.emptyList();
+        if (partialSolution == null && excludeClauses.isEmpty()) {
             return Optional.ofNullable(generator.get());
         }
         final Assignment assumptions = generator.getAssumptions();
@@ -96,43 +100,88 @@ public class RandomConfigurationUpdater implements ConfigurationUpdater {
         }
     }
 
-    @Override
-    public Optional<LiteralList> choose(Collection<LiteralList> clauses) {
-        if (clauses.isEmpty()) {
-            return Optional.ofNullable(generator.get());
-        }
-        LiteralList merge = LiteralList.merge(clauses, model.getVariables().getVariableCount());
+    public LiteralList random() {
+        CNF modelCnf = model.getCache().get(CNFProvider.fromFormula()).get();
+        Sat4JSolver solver = new Sat4JSolver(modelCnf);
+        solver.setSelectionStrategy(SStrategy.random(random));
+        solver.shuffleOrder(random);
+        return solver.findSolution();
+    }
 
+    @Override
+    public LiteralList choose(List<int[]> clauses) {
         CNF modelCnf = model.getCache().get(CNFProvider.fromFormula()).get();
         VariableMap variables = new VariableMap(modelCnf.getVariableMap());
         CNF cnf = new CNF(variables, modelCnf.getClauses());
+        final int orgVariableCount = variables.getVariableCount();
 
         int[] newNegativeLiterals = new int[clauses.size()];
         int i = 0;
-        for (LiteralList clause : clauses) {
+        for (int[] clause : clauses) {
             int newVar = variables.addBooleanVariable().getIndex();
             newNegativeLiterals[i++] = -newVar;
 
-            for (int l : clause.getLiterals()) {
+            for (int l : clause) {
                 cnf.addClause(new LiteralList(new int[] {l, newVar}, Order.UNORDERED, false));
             }
         }
         cnf.addClause(new LiteralList(newNegativeLiterals, Order.UNORDERED, false));
-        cnf.addClause(merge.negate());
+        cnf.addClause(LiteralList.mergeParallel(clauses, orgVariableCount).negate());
         try {
-            RandomConfigurationGenerator generator = new FastRandomConfigurationGenerator();
-            // TODO return list?
-            generator.setAllowDuplicates(true);
-            generator.setRandom(this.generator.getRandom());
-            generator.setSolver(new Sat4JSolver(cnf));
-            LiteralList literalList = generator.get();
-
-            return literalList == null //
-                    ? Optional.empty()
-                    : Optional.of(new LiteralList(Arrays.copyOf(
-                            literalList.getLiterals(), modelCnf.getVariableMap().getVariableCount())));
+            Sat4JSolver solver = new Sat4JSolver(cnf);
+            solver.setSelectionStrategy(SStrategy.random(random));
+            solver.shuffleOrder(random);
+            return solver.hasSolution() != SatResult.TRUE
+                    ? null
+                    : new LiteralList(
+                            Arrays.copyOf(solver.getInternalSolution(), orgVariableCount), Order.INDEX, false);
         } catch (RuntimeContradictionException e) {
-            return Optional.empty();
+            return null;
+        }
+    }
+
+    public LiteralList getConfig(List<int[]> include, List<int[]> exclude, List<int[]> choose) {
+
+        CNF modelCnf = model.getCache().get(CNFProvider.fromFormula()).get();
+        VariableMap variables = new VariableMap(modelCnf.getVariableMap());
+        CNF cnf = new CNF(variables, modelCnf.getClauses());
+        final int orgVariableCount = variables.getVariableCount();
+
+        int[] newNegativeLiterals = new int[choose.size()];
+        int i = 0;
+        for (int[] clause : choose) {
+            int newVar = variables.addBooleanVariable().getIndex();
+            newNegativeLiterals[i++] = -newVar;
+
+            for (int l : clause) {
+                cnf.addClause(new LiteralList(new int[] {l, newVar}, Order.UNORDERED, false));
+            }
+        }
+        cnf.addClause(new LiteralList(newNegativeLiterals, Order.UNORDERED, false));
+        cnf.addClause(LiteralList.mergeParallel(choose, orgVariableCount).negate());
+
+        if (include != null) {
+            LiteralList includeMerge =
+                    LiteralList.mergeParallel(include, model.getVariables().getVariableCount());
+            for (int literal : includeMerge.getLiterals()) {
+                cnf.addClause(new LiteralList(new int[] {literal}, Order.UNORDERED, false));
+            }
+        }
+        if (exclude != null) {
+            for (int[] clause : exclude) {
+                cnf.addClause(new LiteralList(clause, Order.UNORDERED, false).negate());
+            }
+        }
+        try {
+            Sat4JSolver solver = new Sat4JSolver(cnf);
+            solver.setSelectionStrategy(SStrategy.random(random));
+            solver.shuffleOrder(random);
+            return solver.hasSolution() != SatResult.TRUE
+                    ? null
+                    : new LiteralList(
+                            Arrays.copyOf(solver.getInternalSolution(), orgVariableCount), Order.INDEX, false);
+        } catch (RuntimeContradictionException e) {
+            return null;
         }
     }
 }

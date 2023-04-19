@@ -40,7 +40,7 @@ public abstract class Sat4JAnalysis<T> extends AbstractAnalysis<T, Sat4JSolver, 
 
     protected boolean timeoutOccurred = false;
     private boolean throwTimeoutException = true;
-    private int timeout = 1000;
+    private int timeout = 1_000_000;
 
     protected Random random = new Random(112358);
 
