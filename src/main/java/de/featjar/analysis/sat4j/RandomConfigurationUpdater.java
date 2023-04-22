@@ -36,6 +36,7 @@ import de.featjar.formula.structure.atomic.Assignment;
 import de.featjar.formula.structure.atomic.literal.VariableMap;
 import de.featjar.util.data.Pair;
 import de.featjar.util.job.NullMonitor;
+import de.featjar.util.logging.Logger;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -110,11 +111,20 @@ public class RandomConfigurationUpdater implements ConfigurationUpdater {
 
     @Override
     public LiteralList choose(List<int[]> clauses) {
+    	Logger.logError("Choose");
+    	Logger.logError("\tClauses: " + clauses.stream()
+                .map(Arrays::toString)
+                .reduce((a, b) -> a + ", " + b)
+                .orElse(""));
         CNF modelCnf = model.getCache().get(CNFProvider.fromFormula()).get();
         VariableMap variables = new VariableMap(modelCnf.getVariableMap());
         CNF cnf = new CNF(variables, modelCnf.getClauses());
         final int orgVariableCount = variables.getVariableCount();
-
+        Logger.logError("\tOrg CNF: " + cnf.getClauses().stream()
+                .map(LiteralList::toString)
+                .reduce((a, b) -> a + ", " + b)
+                .orElse(""));
+        
         int[] newNegativeLiterals = new int[clauses.size()];
         int i = 0;
         for (int[] clause : clauses) {
@@ -127,6 +137,10 @@ public class RandomConfigurationUpdater implements ConfigurationUpdater {
         }
         cnf.addClause(new LiteralList(newNegativeLiterals, Order.UNORDERED, false));
         cnf.addClause(LiteralList.mergeParallel(clauses, orgVariableCount).negate());
+        Logger.logError("\tNew CNF: " + cnf.getClauses().stream()
+                .map(LiteralList::toString)
+                .reduce((a, b) -> a + ", " + b)
+                .orElse(""));
         try {
             Sat4JSolver solver = new Sat4JSolver(cnf);
             solver.setSelectionStrategy(SStrategy.random(random));
