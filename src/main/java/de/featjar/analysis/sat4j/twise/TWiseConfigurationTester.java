@@ -135,7 +135,8 @@ public class TWiseConfigurationTester {
         final TWiseCombiner combiner =
                 new TWiseCombiner(getUtil().getCnf().getVariableMap().getVariableCount());
         List<LiteralList> combinedCondition = new ArrayList<>();
-        final List<LiteralList>[] clauseListArray = new List[t];
+        @SuppressWarnings("unchecked")
+		final List<LiteralList>[] clauseListArray = new List[t];
 
         groupLoop:
         for (final List<List<LiteralList>> expressions : presenceConditionManager.getGroupedPresenceConditions()) {
