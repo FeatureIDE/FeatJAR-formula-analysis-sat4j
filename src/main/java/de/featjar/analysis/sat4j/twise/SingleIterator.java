@@ -40,7 +40,7 @@ public class SingleIterator implements ICombinationSupplier<List<LiteralList>> {
     private final List<LiteralList>[] nextCombination;
 
     @SuppressWarnings("unchecked")
-	public SingleIterator(int t, int n, List<List<LiteralList>> expressionSet) {
+    public SingleIterator(int t, int n, List<List<LiteralList>> expressionSet) {
         this.expressionSet = expressionSet;
 
         combiner = new TWiseCombiner(n);

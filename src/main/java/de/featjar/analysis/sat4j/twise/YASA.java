@@ -36,8 +36,8 @@ import de.featjar.clauses.LiteralList;
 import de.featjar.clauses.LiteralList.Order;
 import de.featjar.clauses.solutions.SolutionList;
 import de.featjar.clauses.solutions.combinations.BinomialCalculator;
-import de.featjar.clauses.solutions.combinations.CombinationIterator;
 import de.featjar.clauses.solutions.combinations.LexicographicIterator;
+import de.featjar.clauses.solutions.combinations.LexicographicIterator.Combination;
 import de.featjar.util.data.Identifier;
 import de.featjar.util.data.IntList;
 import de.featjar.util.job.Executor;
@@ -55,6 +55,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
+import java.util.stream.Stream;
 
 /**
  * YASA sampling algorithm. Generates configurations for a given propositional
@@ -476,7 +477,7 @@ public class YASA extends AbstractConfigurationGenerator {
     private void buildCombinations(InternalMonitor monitor, int phase) {
         // TODO Variation Point: Combination order
         shuffleSort();
-        final CombinationIterator it = new LexicographicIterator(t, presenceConditions.size());
+        Stream<Combination> stream = LexicographicIterator.stream(t, presenceConditions.size());
 
         final int[] literals = new int[presenceConditions.size()];
         for (int i1 = 0; i1 < literals.length; i1++) {
@@ -491,26 +492,27 @@ public class YASA extends AbstractConfigurationGenerator {
             for (int i2 = 0; i2 < indexSize; i2++) {
                 indexedSolutions.add(new IntList());
             }
-            for (int[] next = it.next(); next != null; next = it.next()) {
+            stream.forEach(combo -> {
+                int[] next = combo.elementIndices;
                 monitor.step();
                 for (int i = 0; i < next.length; i++) {
                     combinationLiterals[i] = literals[next[i]];
                 }
 
                 if (isCovered(combinationLiterals, indexedSolutions)) {
-                    continue;
+                    return;
                 }
                 if (isCombinationInvalidMIG(combinationLiterals)) {
-                    continue;
+                    return;
                 }
 
                 if (isCombinationValidSample(combinationLiterals)) {
                     if (firstCover(combinationLiterals)) {
-                        continue;
+                        return;
                     }
                 } else {
                     if (isCombinationInvalidSAT(combinationLiterals)) {
-                        continue;
+                        return;
                     }
                     addToCandidateList(combinationLiterals);
                 }
@@ -523,38 +525,38 @@ public class YASA extends AbstractConfigurationGenerator {
                 // }
 
                 if (coverSat(combinationLiterals)) {
-                    continue;
+                    return;
                 }
                 newConfiguration(combinationLiterals);
-            }
+            });
             bestResult = solutionList;
         } else {
-            long remainingCombinations = maxCombinationIndex;
-            for (int[] next = it.next(); next != null; next = it.next()) {
-                monitor.step();
-                remainingCombinations--;
-                for (int i = 0; i < next.length; i++) {
-                    combinationLiterals[i] = literals[next[i]];
-                }
+            stream.map(combo -> {
+                        int[] next = combo.elementIndices;
+                        monitor.step();
+                        for (int i = 0; i < next.length; i++) {
+                            combinationLiterals[i] = literals[next[i]];
+                        }
 
-                if (isCovered(combinationLiterals, indexedSolutions)) {
-                    continue;
-                }
-                if (!isCovered(combinationLiterals, indexedBestSolutions)) {
-                    continue;
-                }
-                if (firstCover(combinationLiterals)) {
-                    continue;
-                }
-                if (coverSat(combinationLiterals)) {
-                    continue;
-                }
-                if (solutionList.size() == bestResult.size()) {
-                    monitor.step(remainingCombinations);
-                    break;
-                }
-                newConfiguration(combinationLiterals);
-            }
+                        if (isCovered(combinationLiterals, indexedSolutions)) {
+                            return true;
+                        }
+                        if (!isCovered(combinationLiterals, indexedBestSolutions)) {
+                            return true;
+                        }
+                        if (firstCover(combinationLiterals)) {
+                            return true;
+                        }
+                        if (coverSat(combinationLiterals)) {
+                            return true;
+                        }
+                        if (solutionList.size() == bestResult.size()) {
+                            return false;
+                        }
+                        newConfiguration(combinationLiterals);
+                        return true;
+                    })
+                    .anyMatch(x -> x == false);
             if (bestResult.size() > solutionList.size()) {
                 bestResult = solutionList;
             }

@@ -29,6 +29,9 @@ import de.featjar.clauses.solutions.combinations.LexicographicIterator;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * Tests whether a set of configurations achieves t-wise feature coverage.
@@ -134,30 +137,30 @@ public class TWiseConfigurationTester {
         final ArrayList<List<LiteralList>> uncoveredConditions = new ArrayList<>();
         final TWiseCombiner combiner =
                 new TWiseCombiner(getUtil().getCnf().getVariableMap().getVariableCount());
-        List<LiteralList> combinedCondition = new ArrayList<>();
         @SuppressWarnings("unchecked")
-		final List<LiteralList>[] clauseListArray = new List[t];
+        final List<LiteralList>[] clauseListArray = new List[t];
 
         groupLoop:
         for (final List<List<LiteralList>> expressions : presenceConditionManager.getGroupedPresenceConditions()) {
-            for (final CombinationIterator iterator = new LexicographicIterator(t, expressions.size());
-                    iterator.hasNext(); ) {
-                final int[] next = iterator.next();
-                if (next == null) {
-                    break;
+            Stream<List<LiteralList>> stream = LexicographicIterator.stream(t, expressions.size())
+                    .map(c -> {
+                        CombinationIterator.select(expressions, c.elementIndices, clauseListArray);
+                        List<LiteralList> combinedCondition = new ArrayList<>();
+                        combiner.combineConditions(clauseListArray, combinedCondition);
+                        return (!TWiseConfigurationUtil.isCovered(combinedCondition, sample)
+                                        && getUtil().isCombinationValid(combinedCondition)) //
+                                ? combinedCondition //
+                                : null;
+                    })
+                    .filter(Objects::nonNull);
+            if (cancelAfterFirst) {
+                Optional<List<LiteralList>> findFirst = stream.parallel().findFirst();
+                if (findFirst.isPresent()) {
+                    uncoveredConditions.add(findFirst.get());
+                    break groupLoop;
                 }
-                CombinationIterator.select(expressions, next, clauseListArray);
-
-                combinedCondition.clear();
-                combiner.combineConditions(clauseListArray, combinedCondition);
-                if (!TWiseConfigurationUtil.isCovered(combinedCondition, sample)
-                        && getUtil().isCombinationValid(combinedCondition)) {
-                    uncoveredConditions.add(combinedCondition);
-                    combinedCondition = new ArrayList<>();
-                    if (cancelAfterFirst) {
-                        break groupLoop;
-                    }
-                }
+            } else {
+                stream.forEach(uncoveredConditions::add);
             }
         }
         return uncoveredConditions;

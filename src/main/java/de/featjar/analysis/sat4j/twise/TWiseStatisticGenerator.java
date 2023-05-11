@@ -67,7 +67,7 @@ public class TWiseStatisticGenerator {
                 new TWiseCombiner(util.getCnf().getVariableMap().getVariableCount());
         final List<LiteralList> combinedCondition = new ArrayList<>();
         @SuppressWarnings("unchecked")
-		final List<LiteralList>[] clauseListArray = new List[t];
+        final List<LiteralList>[] clauseListArray = new List[t];
         final ArrayList<ArrayList<List<Pair<Integer, LiteralList>>>> configurationSubLists =
                 new ArrayList<>(sampleListSize);
 
