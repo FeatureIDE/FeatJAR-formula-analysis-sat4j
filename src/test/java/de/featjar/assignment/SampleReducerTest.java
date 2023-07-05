@@ -21,6 +21,7 @@
 package de.featjar.assignment;
 
 import de.featjar.analysis.sat4j.FastRandomConfigurationGenerator;
+import de.featjar.analysis.sat4j.RandomConfigurationGenerator;
 import de.featjar.analysis.sat4j.twise.YASA;
 import de.featjar.clauses.LiteralList;
 import de.featjar.clauses.solutions.analysis.SampleReducer;
@@ -53,26 +54,32 @@ public class SampleReducerTest {
 
         YASA twiseGenerator = new YASA();
         twiseGenerator.setT(t);
+        twiseGenerator.setRandom(new Random(randomSeed));
         List<LiteralList> solutionList1 = model.get(twiseGenerator).getSolutions();
 
-        FastRandomConfigurationGenerator randomGenerator = new FastRandomConfigurationGenerator();
+        RandomConfigurationGenerator randomGenerator = new FastRandomConfigurationGenerator();
         randomGenerator.setLimit(solutionList1.size());
         randomGenerator.setRandom(new Random(randomSeed));
         List<LiteralList> solutionList2 = model.get(randomGenerator).getSolutions();
 
-        List<LiteralList> sample = new ArrayList<>(solutionList1.size() + solutionList2.size());
+        List<LiteralList> sample = new ArrayList<>();
         sample.addAll(solutionList1);
         sample.addAll(solutionList2);
         Collections.shuffle(sample, new Random(randomSeed));
 
+        Logger.logInfo("Reduce...");
+        long start = System.currentTimeMillis();
         List<LiteralList> reducedSample = SampleReducer.reduce(sample, t);
+        long end = System.currentTimeMillis();
+
+        Logger.logInfo("Time: " + ((end - start) / 1000.0));
 
         Collections.sort(solutionList1, Comparator.comparing(LiteralList::toString));
         Collections.sort(reducedSample, Comparator.comparing(LiteralList::toString));
 
         System.out.println(solutionList1.size());
-        solutionList1.forEach(l -> System.out.println(l.toString()));
+//        solutionList1.forEach(l -> System.out.println(l.toString()));
         System.out.println(reducedSample.size());
-        reducedSample.forEach(l -> System.out.println(l.toString()));
+//        reducedSample.forEach(l -> System.out.println(l.toString()));
     }
 }

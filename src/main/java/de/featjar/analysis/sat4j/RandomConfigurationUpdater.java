@@ -42,6 +42,12 @@ public class RandomConfigurationUpdater implements ConfigurationUpdater {
         this.model = model;
         this.random = random;
     }
+    
+    protected RandomConfigurationUpdater(RandomConfigurationUpdater oldUpdater) {
+        this.model = oldUpdater.model;
+        // TODO 
+        this.random = new Random(oldUpdater.random.nextLong());
+    }
 
     @Override
     public Optional<LiteralList> update(LiteralList partialSolution) {
@@ -98,4 +104,9 @@ public class RandomConfigurationUpdater implements ConfigurationUpdater {
             return Optional.empty();
         }
     }
+
+	@Override
+	public RandomConfigurationUpdater clone() {
+		return new RandomConfigurationUpdater(this);
+	}
 }
