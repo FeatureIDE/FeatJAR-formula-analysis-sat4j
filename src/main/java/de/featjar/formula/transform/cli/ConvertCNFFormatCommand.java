@@ -17,11 +17,11 @@ import java.nio.file.Path;
 import java.util.List;
 
 /**
- * Converts the format of a given formula using SAT4J.
+ * Converts the format of a given formula into another CNF format using SAT4J.
  *
  * @author Andreas Gerasimow
  */
-public class ConvertFormatCommand implements ICommand {
+public class ConvertCNFFormatCommand implements ICommand {
 
     /**
      * Specifies output format.
@@ -53,11 +53,16 @@ public class ConvertFormatCommand implements ICommand {
                     .flatMap(p -> IO.load(p, FormulaFormats.getInstance()))
                     .orElseThrow();
 
+            IFormula cnfFormula = Computations.of(formula)
+                    .map(ComputeNNFFormula::new)
+                    .map(ComputeCNFFormula::new)
+                    .compute();
+
             if (outputPath == null || outputPath.toString().equals("results")) {
-                String string = format.serialize(formula).orElseThrow();
+                String string = format.serialize(cnfFormula).orElseThrow();
                 FeatJAR.log().message(string);
             } else {
-                IO.save(formula, outputPath, format);
+                IO.save(cnfFormula, outputPath, format);
             }
 
         } catch (ClassNotFoundException | IOException e) {
@@ -67,11 +72,11 @@ public class ConvertFormatCommand implements ICommand {
 
     @Override
     public String getDescription() {
-        return "Converts the format of a given formula using SAT4J.";
+        return "Converts the format of a given formula into another CNF format using SAT4J.";
     }
 
     @Override
     public String getShortName() {
-        return "convert-format-sat4j";
+        return "convert-cnf-format-sat4j";
     }
 }

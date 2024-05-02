@@ -7,16 +7,13 @@ import de.featjar.base.computation.Computations;
 import de.featjar.base.data.Pair;
 import de.featjar.base.data.Result;
 import de.featjar.base.io.IO;
-import de.featjar.base.io.format.IFormat;
 import de.featjar.formula.analysis.VariableMap;
 import de.featjar.formula.analysis.bool.BooleanAssignment;
 import de.featjar.formula.analysis.bool.BooleanAssignmentGroups;
 import de.featjar.formula.analysis.bool.BooleanClauseList;
 import de.featjar.formula.analysis.bool.ComputeBooleanClauseList;
 import de.featjar.formula.io.FormulaFormats;
-import de.featjar.formula.io.binary.BooleanAssignmentGroupsBinaryFormat;
 import de.featjar.formula.io.csv.BooleanAssignmentGroupsCSVFormat;
-import de.featjar.formula.io.dimacs.BooleanAssignmentGroupsDimacsFormat;
 import de.featjar.formula.structure.formula.IFormula;
 import de.featjar.formula.transform.CNFSlicer;
 import de.featjar.formula.transformer.ComputeCNFFormula;
@@ -27,52 +24,41 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
 
-public class SlicingCommand implements ICommand {
+/**
+ * Removes literals of a given formula using SAT4J.
+ *
+ * @author Andreas Gerasimow
+ */
+public class ProjectionCommand implements ICommand {
 
-    public enum Format {
-        CSV(new BooleanAssignmentGroupsCSVFormat()),
-        DIMACS(new BooleanAssignmentGroupsDimacsFormat()),
-        BINARY(new BooleanAssignmentGroupsBinaryFormat());
-
-        private final IFormat<BooleanAssignmentGroups> format;
-
-        Format(IFormat<BooleanAssignmentGroups> format) {
-            this.format = format;
-        }
-
-        public IFormat<BooleanAssignmentGroups> getFormat() {
-            return this.format;
-        }
-    }
-
-    public static final ListOption<String> FEATURES_OPTION = (ListOption<String>) new ListOption<>(
-            "features", Option.StringParser)
-            .setDescription("Features to be sliced.")
+    /**
+     * Literals to be removed.private long mixedCount;
+     */
+    public static final ListOption<String> LITERALS_OPTION = (ListOption<String>) new ListOption<>(
+            "literals", Option.StringParser)
+            .setDescription("Literals to be removed.")
             .setRequired(true);
 
+    /**
+     * Timeout in seconds.
+     */
     public static final Option<Duration> TIMEOUT_OPTION = new Option<>(
             "timeout", s -> Duration.ofSeconds(Long.parseLong(s)))
-            .setDescription("Timeout in seconds")
+            .setDescription("Timeout in seconds.")
             .setValidator(timeout -> !timeout.isNegative())
             .setDefaultValue(Duration.ZERO);
 
-    public static final Option<Format> FORMAT_OPTION = new Option<>(
-            "format", Format::valueOf)
-            .setDescription("Select output format: CSV, DIMACS, BINARY.")
-            .setDefaultValue(Format.CSV);
-
-
     @Override
     public List<Option<?>> getOptions() {
-        return  List.of(FEATURES_OPTION, TIMEOUT_OPTION, FORMAT_OPTION, INPUT_OPTION, OUTPUT_OPTION);
+        return  List.of(LITERALS_OPTION, TIMEOUT_OPTION, INPUT_OPTION, OUTPUT_OPTION);
     }
 
     @Override
     public void run(OptionList optionParser) {
         Path outputPath = optionParser.getResult(OUTPUT_OPTION).orElse(null);
-        List<String> features = optionParser.getResult(FEATURES_OPTION).get();
+        List<String> literals = optionParser.getResult(LITERALS_OPTION).get();
         Duration timeout = optionParser.getResult(TIMEOUT_OPTION).get();
-        Format format = optionParser.getResult(FORMAT_OPTION).orElse(Format.CSV);
+        BooleanAssignmentGroupsCSVFormat format = new BooleanAssignmentGroupsCSVFormat();
 
         IFormula inputFormula = optionParser
                 .getResult(INPUT_OPTION)
@@ -90,17 +76,17 @@ public class SlicingCommand implements ICommand {
         VariableMap variableMapClone = variableMap.clone();
 
         // check if feature name exists
-        features.forEach((feature) -> {
-            if (variableMap.get(feature).isEmpty()) {
-                FeatJAR.log().warning("Feature " + feature + " does not exist in feature model.");
+        literals.forEach((literal) -> {
+            if (variableMap.get(literal).isEmpty()) {
+                FeatJAR.log().warning("Feature " + literal + " does not exist in feature model.");
             } else {
-                variableMap.remove(feature);
+                variableMap.remove(literal);
             }
         });
 
         variableMap.normalize();
 
-        int[] array = features.stream()
+        int[] array = literals.stream()
                .map(variableMapClone::get)
                .filter(Result::isPresent)
                .mapToInt(Result::get).toArray();
@@ -125,11 +111,11 @@ public class SlicingCommand implements ICommand {
             BooleanClauseList clauseList = result.get().adapt(variableMapClone, variableMap);
 
             try {
-                if (outputPath == null) {
-                    String string = format.getFormat().serialize(new BooleanAssignmentGroups(variableMap, List.of(clauseList.getAll()))).orElseThrow();
+                if (outputPath == null || outputPath.toString().equals("results")) {
+                    String string = format.serialize(new BooleanAssignmentGroups(variableMap, List.of(clauseList.getAll()))).orElseThrow();
                     FeatJAR.log().message(string);
                 } else {
-                    IO.save(new BooleanAssignmentGroups(variableMap, List.of(clauseList.getAll())), outputPath, format.getFormat());
+                    IO.save(new BooleanAssignmentGroups(variableMap, List.of(clauseList.getAll())), outputPath, format);
                 }
             } catch (IOException | RuntimeException e) {
                 FeatJAR.log().error(e);
@@ -138,5 +124,14 @@ public class SlicingCommand implements ICommand {
             FeatJAR.log().error("Couldn't compute result:\n" + result.printProblems());
         }
     }
-    // TODO: Write tests, flag for different formats, ExpressionSerializer.java, ExpressionFormat.java, Create command for printing, create command for converting to other format
+
+    @Override
+    public String getDescription() {
+        return "Removes literals of a given formula using SAT4J.";
+    }
+
+    @Override
+    public String getShortName() {
+        return "projection-sat4j";
+    }
 }
