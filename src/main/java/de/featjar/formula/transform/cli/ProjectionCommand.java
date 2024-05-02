@@ -111,7 +111,7 @@ public class ProjectionCommand implements ICommand {
             BooleanClauseList clauseList = result.get().adapt(variableMapClone, variableMap);
 
             try {
-                if (outputPath == null) {
+                if (outputPath == null || outputPath.toString().equals("results")) {
                     String string = format.serialize(new BooleanAssignmentGroups(variableMap, List.of(clauseList.getAll()))).orElseThrow();
                     FeatJAR.log().message(string);
                 } else {

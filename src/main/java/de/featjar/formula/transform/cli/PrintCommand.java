@@ -1,6 +1,7 @@
 package de.featjar.formula.transform.cli;
 
 import de.featjar.base.FeatJAR;
+import de.featjar.base.cli.Flag;
 import de.featjar.base.cli.ICommand;
 import de.featjar.base.cli.Option;
 import de.featjar.base.cli.OptionList;
@@ -62,15 +63,15 @@ public class PrintCommand implements ICommand {
     /**
      * Enforces parentheses.
      */
-    public static final Option<Boolean> ENFORCE_PARENTHESES_OPTION = new Option<>(
-            "enforce-parentheses", Option.BooleanParser)
+    public static final Option<Boolean> ENFORCE_PARENTHESES_OPTION = new Flag(
+            "enforce-parentheses")
             .setDescription("Enforces parentheses.");
 
     /**
      * Enquotes whitespace.
      */
-    public static final Option<Boolean> ENQUOTE_WHITESPACE_OPTION = new Option<>(
-            "enquote-whitespace", Option.BooleanParser)
+    public static final Option<Boolean> ENQUOTE_WHITESPACE_OPTION = new Flag(
+            "enquote-whitespace")
             .setDescription("Enquotes whitespace.");
 
     @Override

@@ -53,7 +53,7 @@ public class ConvertFormatCommand implements ICommand {
                     .flatMap(p -> IO.load(p, FormulaFormats.getInstance()))
                     .orElseThrow();
 
-            if (outputPath == null) {
+            if (outputPath == null || outputPath.toString().equals("results")) {
                 String string = format.serialize(formula).orElseThrow();
                 FeatJAR.log().message(string);
             } else {

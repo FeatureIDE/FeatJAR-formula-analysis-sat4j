@@ -58,7 +58,7 @@ public class ConvertCNFFormatCommand implements ICommand {
                     .map(ComputeCNFFormula::new)
                     .compute();
 
-            if (outputPath == null) {
+            if (outputPath == null || outputPath.toString().equals("results")) {
                 String string = format.serialize(cnfFormula).orElseThrow();
                 FeatJAR.log().message(string);
             } else {

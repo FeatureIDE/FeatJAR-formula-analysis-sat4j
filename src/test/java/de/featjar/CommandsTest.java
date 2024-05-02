@@ -17,10 +17,10 @@ public class CommandsTest {
     void testPrintCommand() throws IOException {
         System.out.println("Testing PrintCommand");
         String testFile = new String(Files.readAllBytes(Path.of("./src/test/java/de/featjar/res/testPrintCommand")));
-        ProcessOutput output = runProcess(sat4jstring + " print-sat4j --input ../formula/src/testFixtures/resources/GPL/model.xml --tab [tab] --notation PREFIX --separator [separator] --format de.featjar.formula.io.textual.JavaSymbols --newline [newline] --enforce-parentheses true --enquote-whitespace true");
+        ProcessOutput output = runProcess(sat4jstring + " print-sat4j --input ../formula/src/testFixtures/resources/GPL/model.xml --tab [tab] --notation PREFIX --separator [separator] --format de.featjar.formula.io.textual.JavaSymbols --newline [newline] --enforce-parentheses --enquote-whitespace");
         output.printOutput();
         Assertions.assertTrue(output.errorString.isBlank());
-        Assertions.assertEquals(output.outputString.trim(), testFile.trim());
+        Assertions.assertEquals(testFile.trim(), output.outputString.trim().substring(20));
     }
 
     @Test
@@ -40,7 +40,7 @@ public class CommandsTest {
         String testFile = new String(Files.readAllBytes(Path.of("./src/test/java/de/featjar/res/testConvertFormatCommand.dimacs")));
         ProcessOutput output = runProcess(sat4jstring + " convert-cnf-format-sat4j --input ../formula/src/testFixtures/resources/GPL/model.xml --format de.featjar.formula.io.dimacs.FormulaDimacsFormat");
         Assertions.assertTrue(output.errorString.isBlank());
-        Assertions.assertEquals(output.outputString.trim(), testFile.trim());
+        Assertions.assertEquals(testFile.trim(), output.outputString.trim().substring(20));
     }
 
     @Test
