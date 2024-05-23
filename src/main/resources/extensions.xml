@@ -7,8 +7,5 @@
 		<extension id="de.featjar.formula.analysis.cli.SolutionCountCommand" />
 		<extension id="de.featjar.formula.analysis.cli.TWiseCommand" />
 		<extension id="de.featjar.formula.transform.cli.ProjectionCommand" />
-		<extension id="de.featjar.formula.transform.cli.PrintCommand" />
-		<extension id="de.featjar.formula.transform.cli.ConvertCNFFormatCommand" />
-		<extension id="de.featjar.formula.transform.cli.ConvertFormatCommand" />
 	</point>
 </extensions>

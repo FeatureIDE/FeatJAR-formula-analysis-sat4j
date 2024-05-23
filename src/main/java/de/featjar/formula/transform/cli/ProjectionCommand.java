@@ -1,3 +1,23 @@
+/*
+ * Copyright (C) 2024 FeatJAR-Development-Team
+ *
+ * This file is part of FeatJAR-formula-analysis-sat4j.
+ *
+ * formula-analysis-sat4j is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3.0 of the License,
+ * or (at your option) any later version.
+ *
+ * formula-analysis-sat4j is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with formula-analysis-sat4j. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * See <https://github.com/FeatureIDE/FeatJAR-formula-analysis-sat4j> for further information.
+ */
 package de.featjar.formula.transform.cli;
 
 import de.featjar.base.FeatJAR;
@@ -16,13 +36,15 @@ import de.featjar.formula.io.FormulaFormats;
 import de.featjar.formula.io.csv.BooleanAssignmentGroupsCSVFormat;
 import de.featjar.formula.structure.formula.IFormula;
 import de.featjar.formula.transform.CNFSlicer;
-import de.featjar.formula.transformer.ComputeCNFFormula;
-import de.featjar.formula.transformer.ComputeNNFFormula;
-
+import de.featjar.formula.transform.ComputeCNFFormula;
+import de.featjar.formula.transform.ComputeNNFFormula;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Removes literals of a given formula using SAT4J.
@@ -32,31 +54,40 @@ import java.util.List;
 public class ProjectionCommand implements ICommand {
 
     /**
-     * Literals to be removed.private long mixedCount;
+     * Literals to be removed.;
      */
-    public static final ListOption<String> LITERALS_OPTION = (ListOption<String>) new ListOption<>(
-            "literals", Option.StringParser)
-            .setDescription("Literals to be removed.")
-            .setRequired(true);
+    public static final ListOption<String> LITERALS_SLICE_OPTION =
+            (ListOption<String>) new ListOption<>("slice", Option.StringParser)
+                    .setDescription("Literals to be removed.")
+                    .setRequired(false);
+
+    public static final ListOption<String> LITERALS_PROJECT_OPTION =
+            (ListOption<String>) new ListOption<>("project", Option.StringParser)
+                    .setDescription(
+                            "Literals to be projected. If not set, all features will be projected. The slice option has a higher priority, i.e. if both the project and slice option contain the same literal, it will be removed.")
+                    .setRequired(false);
 
     /**
      * Timeout in seconds.
      */
     public static final Option<Duration> TIMEOUT_OPTION = new Option<>(
-            "timeout", s -> Duration.ofSeconds(Long.parseLong(s)))
+                    "timeout", s -> Duration.ofSeconds(Long.parseLong(s)))
             .setDescription("Timeout in seconds.")
             .setValidator(timeout -> !timeout.isNegative())
             .setDefaultValue(Duration.ZERO);
 
     @Override
     public List<Option<?>> getOptions() {
-        return  List.of(LITERALS_OPTION, TIMEOUT_OPTION, INPUT_OPTION, OUTPUT_OPTION);
+        return List.of(LITERALS_SLICE_OPTION, LITERALS_PROJECT_OPTION, TIMEOUT_OPTION, INPUT_OPTION, OUTPUT_OPTION);
     }
 
     @Override
     public void run(OptionList optionParser) {
         Path outputPath = optionParser.getResult(OUTPUT_OPTION).orElse(null);
-        List<String> literals = optionParser.getResult(LITERALS_OPTION).get();
+        List<String> projectLiterals =
+                optionParser.getResult(LITERALS_PROJECT_OPTION).orElse(List.of());
+        Set<String> sliceLiterals = new LinkedHashSet<>(
+                optionParser.getResult(LITERALS_SLICE_OPTION).orElse(List.of()));
         Duration timeout = optionParser.getResult(TIMEOUT_OPTION).get();
         BooleanAssignmentGroupsCSVFormat format = new BooleanAssignmentGroupsCSVFormat();
 
@@ -75,9 +106,15 @@ public class ProjectionCommand implements ICommand {
 
         VariableMap variableMapClone = variableMap.clone();
 
-        // check if feature name exists
-        literals.forEach((literal) -> {
-            if (variableMap.get(literal).isEmpty()) {
+        if (!projectLiterals.isEmpty()) {
+            List<String> inverseProjectLiterals = new ArrayList<>(inputFormula.getVariableNames());
+            inverseProjectLiterals.removeAll(projectLiterals);
+            sliceLiterals.addAll(
+                    inverseProjectLiterals); // add all literals that are not in projectLiterals to sliceLiterals
+        }
+
+        sliceLiterals.forEach((literal) -> {
+            if (variableMap.get(literal).isEmpty()) { // check if feature name exists
                 FeatJAR.log().warning("Feature " + literal + " does not exist in feature model.");
             } else {
                 variableMap.remove(literal);
@@ -86,10 +123,11 @@ public class ProjectionCommand implements ICommand {
 
         variableMap.normalize();
 
-        int[] array = literals.stream()
-               .map(variableMapClone::get)
-               .filter(Result::isPresent)
-               .mapToInt(Result::get).toArray();
+        int[] array = sliceLiterals.stream()
+                .map(variableMapClone::get)
+                .filter(Result::isPresent)
+                .mapToInt(Result::get)
+                .toArray();
 
         AComputation<BooleanClauseList> computation = Computations.of(pair.getKey())
                 .map(CNFSlicer::new)
@@ -112,7 +150,9 @@ public class ProjectionCommand implements ICommand {
 
             try {
                 if (outputPath == null || outputPath.toString().equals("results")) {
-                    String string = format.serialize(new BooleanAssignmentGroups(variableMap, List.of(clauseList.getAll()))).orElseThrow();
+                    String string = format.serialize(
+                                    new BooleanAssignmentGroups(variableMap, List.of(clauseList.getAll())))
+                            .orElseThrow();
                     FeatJAR.log().message(string);
                 } else {
                     IO.save(new BooleanAssignmentGroups(variableMap, List.of(clauseList.getAll())), outputPath, format);
