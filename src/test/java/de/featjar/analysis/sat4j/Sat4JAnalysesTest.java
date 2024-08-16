@@ -54,8 +54,7 @@ public class Sat4JAnalysesTest extends AnalysisTest {
 
         BooleanSolution solution = await(clauses.map(ComputeSolutionSAT4J::new));
         BooleanAssignment core = await(clauses.map(ComputeCoreSAT4J::new));
-        BooleanAssignmentList atomicSets =
-                await(clauses.map(ComputeAtomicSetsSAT4J::new));
+        BooleanAssignmentList atomicSets = await(clauses.map(ComputeAtomicSetsSAT4J::new));
         assertNotNull(solution);
         assertNotNull(core);
         assertNotNull(atomicSets);

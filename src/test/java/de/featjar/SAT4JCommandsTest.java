@@ -20,7 +20,6 @@
  */
 package de.featjar;
 
-import de.featjar.base.FeatJAR;
 import de.featjar.base.ProcessOutput;
 import java.io.*;
 import org.junit.jupiter.api.Assertions;
@@ -133,16 +132,16 @@ public class SAT4JCommandsTest {
                 sat4jstring + " count-sat4j --input ../formula/src/testFixtures/resources/GPL/model.xml --seed 0");
         Assertions.assertTrue(seedOption.getErrorString().isBlank());
 
-        ProcessOutput solverTimeoutOption = ProcessOutput.runProcess(
-                sat4jstring + " count-sat4j --input ../formula/src/testFixtures/resources/GPL/model.xml --solver_timeout 10");
+        ProcessOutput solverTimeoutOption = ProcessOutput.runProcess(sat4jstring
+                + " count-sat4j --input ../formula/src/testFixtures/resources/GPL/model.xml --solver_timeout 10");
         Assertions.assertTrue(solverTimeoutOption.getErrorString().isBlank());
 
-        ProcessOutput browserCacheOption = ProcessOutput.runProcess(
-                sat4jstring + " count-sat4j --input ../formula/src/testFixtures/resources/GPL/model.xml --browser-cache true");
+        ProcessOutput browserCacheOption = ProcessOutput.runProcess(sat4jstring
+                + " count-sat4j --input ../formula/src/testFixtures/resources/GPL/model.xml --browser-cache true");
         Assertions.assertTrue(browserCacheOption.getErrorString().isBlank());
 
-        ProcessOutput nonParallelOption = ProcessOutput.runProcess(
-                sat4jstring + " count-sat4j --input ../formula/src/testFixtures/resources/GPL/model.xml --non-parallel true");
+        ProcessOutput nonParallelOption = ProcessOutput.runProcess(sat4jstring
+                + " count-sat4j --input ../formula/src/testFixtures/resources/GPL/model.xml --non-parallel true");
         Assertions.assertTrue(nonParallelOption.getErrorString().isBlank());
 
         ProcessOutput timeoutOption = ProcessOutput.runProcess(
