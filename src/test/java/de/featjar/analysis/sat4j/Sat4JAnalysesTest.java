@@ -52,10 +52,10 @@ public class Sat4JAnalysesTest extends AnalysisTest {
                 .map(ComputeBooleanClauseList::new);
         IComputation<BooleanClauseList> clauses = cnf.map(Computations::getKey);
 
-        BooleanSolution solution = await((IComputation<BooleanSolution>) clauses.map(ComputeSolutionSAT4J::new));
-        BooleanAssignment core = await((IComputation<BooleanAssignment>) clauses.map(ComputeCoreSAT4J::new));
+        BooleanSolution solution = await(clauses.map(ComputeSolutionSAT4J::new));
+        BooleanAssignment core = await(clauses.map(ComputeCoreSAT4J::new));
         BooleanAssignmentList atomicSets =
-                await((IComputation<BooleanAssignmentList>) clauses.map(ComputeAtomicSetsSAT4J::new));
+                await(clauses.map(ComputeAtomicSetsSAT4J::new));
         assertNotNull(solution);
         assertNotNull(core);
         assertNotNull(atomicSets);

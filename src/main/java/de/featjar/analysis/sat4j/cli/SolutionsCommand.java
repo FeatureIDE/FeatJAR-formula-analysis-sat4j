@@ -43,14 +43,14 @@ public class SolutionsCommand extends ASAT4JAnalysisCommand<BooleanSolutionList,
     /**
      * Maximum number of configurations to be generated.
      */
-    public static final Option<Integer> LIMIT_OPTION = new Option<>("n", Option.IntegerParser) //
+    public static final Option<Integer> LIMIT_OPTION = Option.newOption("n", Option.IntegerParser) //
             .setDescription("Maximum number of configurations to be generated.") //
             .setDefaultValue(1);
 
     /**
      * Strategy to use for generating each configuration (%s).
      */
-    public static final Option<ISelectionStrategy.Strategy> SELECTION_STRATEGY_OPTION = new Option<>(
+    public static final Option<ISelectionStrategy.Strategy> SELECTION_STRATEGY_OPTION = Option.newOption(
                     "strategy", Option.valueOf(ISelectionStrategy.Strategy.class)) //
             .setDescription(String.format(
                     "Strategy to use for generating each configuration (%s).",
@@ -60,14 +60,8 @@ public class SolutionsCommand extends ASAT4JAnalysisCommand<BooleanSolutionList,
     /**
      * Forbid dublicate configurations to be generated.
      */
-    public static final Option<Boolean> FORBID_DUPLICATES_OPTION = new Flag("no-dublicates") //
+    public static final Option<Boolean> FORBID_DUPLICATES_OPTION = Flag.newFlag("no-dublicates") //
             .setDescription("Forbid dublicate configurations to be generated.");
-
-    @Override
-    public List<Option<?>> getOptions() {
-        return ICommand.addOptions(
-                super.getOptions(), LIMIT_OPTION, SELECTION_STRATEGY_OPTION, FORBID_DUPLICATES_OPTION);
-    }
 
     @Override
     public Optional<String> getDescription() {

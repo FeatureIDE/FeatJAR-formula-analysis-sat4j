@@ -20,6 +20,7 @@
  */
 package de.featjar;
 
+import de.featjar.base.FeatJAR;
 import de.featjar.base.ProcessOutput;
 import java.io.*;
 import org.junit.jupiter.api.Assertions;
@@ -31,7 +32,6 @@ public class SAT4JCommandsTest {
 
     @Test
     void testProjectionCommand() throws IOException {
-        System.out.println("Testing ProjectionCommand");
         ProcessOutput output = ProcessOutput.runProcess(
                 sat4jstring
                         + " projection-sat4j --input ../formula/src/testFixtures/resources/GPL/model.xml --slice DirectedWithEdges,DirectedWithNeighbors");
@@ -70,7 +70,6 @@ public class SAT4JCommandsTest {
 
     @Test
     void testCoreCommand() throws IOException {
-        System.out.println("Testing CoreCommand:");
         ProcessOutput noOptions = ProcessOutput.runProcess(
                 sat4jstring + " core-sat4j --input ../formula/src/testFixtures/resources/GPL/model.xml");
         Assertions.assertTrue(noOptions.getErrorString().isBlank());
@@ -98,7 +97,6 @@ public class SAT4JCommandsTest {
 
     @Test
     void testAtomicSetsCommand() throws IOException {
-        System.out.println("Testing AtomicSetsCommand:");
         ProcessOutput noOptions = ProcessOutput.runProcess(
                 sat4jstring + " atomic-sets-sat4j --input ../formula/src/testFixtures/resources/GPL/model.xml");
         Assertions.assertTrue(noOptions.getErrorString().isBlank());
@@ -127,38 +125,36 @@ public class SAT4JCommandsTest {
 
     @Test
     void testSolutionCountCommand() throws IOException {
-        System.out.println("Testing SolutionCountCommand:");
         ProcessOutput noOptions = ProcessOutput.runProcess(
-                sat4jstring + " solution-count-sat4j --input ../formula/src/testFixtures/resources/GPL/model.xml");
+                sat4jstring + " count-sat4j --input ../formula/src/testFixtures/resources/GPL/model.xml");
         Assertions.assertTrue(noOptions.getErrorString().isBlank());
 
         ProcessOutput seedOption = ProcessOutput.runProcess(sat4jstring
-                + " solution-count-sat4j --input ../formula/src/testFixtures/resources/GPL/model.xml --seed 0");
+                + " count-sat4j --input ../formula/src/testFixtures/resources/GPL/model.xml --seed 0");
         Assertions.assertTrue(seedOption.getErrorString().isBlank());
 
         ProcessOutput solverTimeoutOption = ProcessOutput.runProcess(
                 sat4jstring
-                        + " solution-count-sat4j --input ../formula/src/testFixtures/resources/GPL/model.xml --solver_timeout 10");
+                        + " count-sat4j --input ../formula/src/testFixtures/resources/GPL/model.xml --solver_timeout 10");
         Assertions.assertTrue(solverTimeoutOption.getErrorString().isBlank());
 
         ProcessOutput browserCacheOption = ProcessOutput.runProcess(
                 sat4jstring
-                        + " solution-count-sat4j --input ../formula/src/testFixtures/resources/GPL/model.xml --browser-cache true");
+                        + " count-sat4j --input ../formula/src/testFixtures/resources/GPL/model.xml --browser-cache true");
         Assertions.assertTrue(browserCacheOption.getErrorString().isBlank());
 
         ProcessOutput nonParallelOption = ProcessOutput.runProcess(
                 sat4jstring
-                        + " solution-count-sat4j --input ../formula/src/testFixtures/resources/GPL/model.xml --non-parallel true");
+                        + " count-sat4j --input ../formula/src/testFixtures/resources/GPL/model.xml --non-parallel true");
         Assertions.assertTrue(nonParallelOption.getErrorString().isBlank());
 
         ProcessOutput timeoutOption = ProcessOutput.runProcess(sat4jstring
-                + " solution-count-sat4j --input ../formula/src/testFixtures/resources/GPL/model.xml --timeout 10");
+                + " count-sat4j --input ../formula/src/testFixtures/resources/GPL/model.xml --timeout 10");
         Assertions.assertTrue(timeoutOption.getErrorString().isBlank());
     }
 
     @Test
     void testSolutionsCommand() throws IOException {
-        System.out.println("Testing SolutionsCommand:");
         ProcessOutput noOptions = ProcessOutput.runProcess(
                 sat4jstring + " solutions-sat4j --input ../formula/src/testFixtures/resources/GPL/model.xml");
         Assertions.assertTrue(noOptions.getErrorString().isBlank());
@@ -198,7 +194,6 @@ public class SAT4JCommandsTest {
 
     @Test
     void testTWiseCommand() throws IOException {
-        System.out.println("Testing TWiseCommand:");
         ProcessOutput noOptions = ProcessOutput.runProcess(
                 sat4jstring + " t-wise-sat4j --input ../formula/src/testFixtures/resources/GPL/model.xml");
         Assertions.assertTrue(noOptions.getErrorString().isBlank());
