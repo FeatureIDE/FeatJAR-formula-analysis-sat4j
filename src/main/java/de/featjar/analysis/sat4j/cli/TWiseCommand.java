@@ -22,7 +22,6 @@ package de.featjar.analysis.sat4j.cli;
 
 import de.featjar.analysis.sat4j.computation.YASA;
 import de.featjar.analysis.sat4j.computation.YASAIncremental;
-import de.featjar.base.cli.ICommand;
 import de.featjar.base.cli.Option;
 import de.featjar.base.computation.Computations;
 import de.featjar.base.computation.IComputation;
@@ -72,10 +71,10 @@ public class TWiseCommand extends ASAT4JAnalysisCommand<BooleanSolutionList, Boo
             .setDefaultValue(false);
 
     /**
-     * Reduce flag.
+     * No-reduce flag.
      */
     public static final Option<Boolean> REDUCE_OPTION = Option.newOption("reduce", Option.BooleanParser) //
-            .setDescription("Use reduce function of YASA.") //
+            .setDescription("Do not use the reduce function of YASA.") //
             .setDefaultValue(true);
 
     @Override

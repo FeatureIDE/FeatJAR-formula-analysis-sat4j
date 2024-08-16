@@ -22,14 +22,11 @@ package de.featjar.analysis.sat4j.cli;
 
 import de.featjar.analysis.sat4j.computation.ComputeSolutionsSAT4J;
 import de.featjar.analysis.sat4j.solver.ISelectionStrategy;
-import de.featjar.base.cli.Flag;
-import de.featjar.base.cli.ICommand;
 import de.featjar.base.cli.Option;
 import de.featjar.base.computation.Computations;
 import de.featjar.base.computation.IComputation;
 import de.featjar.formula.assignment.BooleanSolutionList;
 import de.featjar.formula.assignment.ComputeBooleanClauseList;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -58,9 +55,9 @@ public class SolutionsCommand extends ASAT4JAnalysisCommand<BooleanSolutionList,
             .setDefaultValue(ISelectionStrategy.Strategy.ORIGINAL);
 
     /**
-     * Forbid dublicate configurations to be generated.
+     * Forbid duplicate configurations to be generated.
      */
-    public static final Option<Boolean> FORBID_DUPLICATES_OPTION = Flag.newFlag("no-dublicates") //
+    public static final Option<Boolean> FORBID_DUPLICATES_OPTION = Option.newFlag("no-dublicates") //
             .setDescription("Forbid dublicate configurations to be generated.");
 
     @Override

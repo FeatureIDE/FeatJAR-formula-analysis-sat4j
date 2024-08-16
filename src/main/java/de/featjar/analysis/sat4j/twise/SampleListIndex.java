@@ -22,65 +22,51 @@ package de.featjar.analysis.sat4j.twise;
 
 import de.featjar.analysis.sat4j.solver.ModalImplicationGraph;
 import de.featjar.base.data.ExpandableIntegerList;
-import de.featjar.formula.assignment.BooleanAssignment;
-import de.featjar.formula.assignment.BooleanSolution;
+import de.featjar.formula.assignment.ABooleanAssignment;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.function.Predicate;
 
 /**
- * Common functions for t-wise coverage calculation.
+ * Calculates statistics regarding t-wise feature coverage of a set of
+ * solutions.
  *
  * @author Sebastian Krieter
  */
-public interface TWiseCoverageComputationUtils {
+public class SampleListIndex implements Predicate<int[]> {
 
-    static boolean[][] getMasks(int t) {
-        final boolean[][] masks = new boolean[(int) Math.pow(2, t)][t];
-        for (int i = 0; i < masks.length; i++) {
-            final boolean[] p = masks[i];
-            for (int j = 0; j < t; j++) {
-                p[j] = ((i >> j) & 1) == 0;
+    private final ArrayList<ExpandableIntegerList> indexedSolutions;
+    private final ExpandableIntegerList[] selectedIndexedSolutions;
+
+    public SampleListIndex(List<? extends ABooleanAssignment> sample, final int size, final int t) {
+        indexedSolutions = new ArrayList<>(2 * size);
+        for (int i = 2 * size; i >= 0; --i) {
+            indexedSolutions.add(new ExpandableIntegerList());
+        }
+        int configurationIndex = 0;
+        for (ABooleanAssignment configuration : sample) {
+            final int[] literals = configuration.get();
+            for (int i = 0; i < literals.length; i++) {
+                final int literal = literals[i];
+                if (literal != 0) {
+                    indexedSolutions
+                            .get(ModalImplicationGraph.getVertexIndex(literal))
+                            .add(configurationIndex++);
+                }
             }
         }
-        return masks;
+        selectedIndexedSolutions = new ExpandableIntegerList[t];
     }
 
-    static int[] getFilteredLiterals(final int size, BooleanAssignment filter) {
-        final BooleanSolution filteredVariables = new BooleanSolution(
-                size, filter.stream().map(Math::abs).distinct().toArray());
-        final int[] literals = new int[size - filteredVariables.countNonZero()];
-        int literalsIndex = 0;
-        for (int i = 1; i <= size; i++) {
-            if (!filteredVariables.containsAny(i)) {
-                literals[literalsIndex++] = i;
-            }
-        }
-        return literals;
-    }
-
-    static void addConfigurations(
-            final ArrayList<ExpandableIntegerList> indexedSolutions, int[] configuration, int configurationIndex) {
-        for (int i = 0; i < configuration.length; i++) {
-            final int literal = configuration[i];
-            if (literal != 0) {
-                indexedSolutions
-                        .get(ModalImplicationGraph.getVertexIndex(literal))
-                        .add(configurationIndex);
-            }
-        }
-    }
-
-    static boolean isCovered(
-            ArrayList<ExpandableIntegerList> indexedSolutions,
-            int t,
-            int[] literals,
-            ExpandableIntegerList[] selectedIndexedSolutions) {
-        if (t < 2) {
+    @Override
+    public boolean test(int[] literals) {
+        if (literals.length < 2) {
             return !indexedSolutions
                     .get(ModalImplicationGraph.getVertexIndex(literals[0]))
                     .isEmpty();
         }
-        for (int i = 0; i < t; i++) {
+        for (int i = 0; i < literals.length; i++) {
             final ExpandableIntegerList indexedSolution =
                     indexedSolutions.get(ModalImplicationGraph.getVertexIndex(literals[i]));
             if (indexedSolution.size() == 0) {
@@ -89,14 +75,14 @@ public interface TWiseCoverageComputationUtils {
             selectedIndexedSolutions[i] = indexedSolution;
         }
         Arrays.sort(selectedIndexedSolutions, (a, b) -> a.size() - b.size());
-        final int[] ix = new int[t - 1];
+        final int[] ix = new int[literals.length - 1];
 
         final ExpandableIntegerList i0 = selectedIndexedSolutions[0];
         final int[] ia0 = i0.toArray();
         loop:
         for (int i = 0; i < i0.size(); i++) {
             int id0 = ia0[i];
-            for (int j = 1; j < t; j++) {
+            for (int j = 1; j < literals.length; j++) {
                 final ExpandableIntegerList i1 = selectedIndexedSolutions[j];
                 int binarySearch = Arrays.binarySearch(i1.toArray(), ix[j - 1], i1.size(), id0);
                 if (binarySearch < 0) {
