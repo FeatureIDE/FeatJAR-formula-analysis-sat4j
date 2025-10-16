@@ -140,8 +140,15 @@ public class CompactYASA extends ATWiseSampleComputation {
         changableIdThreshold = initialFixedSample.size();
 
         BooleanAssignmentList clauseList = BOOLEAN_CLAUSE_LIST.get(dependencyList);
+        combinationSets.adapt(clauseList.getVariableMap());
+        variableMap = clauseList.getVariableMap();
         BooleanAssignment assumedAssignment = ASSUMED_ASSIGNMENT.get(dependencyList);
         BooleanAssignmentList assumedClauseList = ASSUMED_CLAUSE_LIST.get(dependencyList);
+        assumedClauseList.adapt(clauseList.getVariableMap());
+
+        includeFilter = includeFilter.adapt(variableMap);
+        excludeFilter = excludeFilter.adapt(variableMap);
+
         Duration timeout = SAT_TIMEOUT.get(dependencyList);
 
         solver = new SAT4JSolutionSolver(clauseList);
