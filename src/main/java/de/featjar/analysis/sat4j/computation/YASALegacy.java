@@ -35,7 +35,7 @@ import de.featjar.base.computation.Progress;
 import de.featjar.base.data.BinomialCalculator;
 import de.featjar.base.data.ExpandableIntegerList;
 import de.featjar.base.data.Result;
-import de.featjar.base.data.SingleLexicographicIterator;
+import de.featjar.base.data.combination.CombinationStream;
 import de.featjar.formula.VariableMap;
 import de.featjar.formula.assignment.BooleanAssignment;
 import de.featjar.formula.assignment.BooleanAssignmentList;
@@ -303,7 +303,7 @@ public class YASALegacy extends ASAT4JAnalysis<BooleanAssignmentList> {
         selectedSampleIndices = new ExpandableIntegerList[t];
         initRun();
 
-        SingleLexicographicIterator.stream(literals.get(), t).forEach(combination -> {
+        CombinationStream.stream(literals.get(), t).forEach(combination -> {
             int[] combinationLiterals = combination.select();
             checkCancel();
             monitor.incrementCurrentStep();
@@ -365,30 +365,29 @@ public class YASALegacy extends ASAT4JAnalysis<BooleanAssignmentList> {
             checkCancel();
             initSample();
             initRun();
-            SingleLexicographicIterator.stream(literals.shuffle(random).get(), t)
-                    .forEach(combination -> {
-                        int[] combinationLiterals = combination.select();
-                        checkCancel();
-                        monitor.incrementCurrentStep();
-                        if (isCovered(combinationLiterals, currentSampleIndices)) {
-                            return;
-                        }
-                        if (!isCovered(combinationLiterals, bestSampleIndices)) {
-                            return;
-                        }
-                        try {
-                            if (tryCoverWithoutMIG(combinationLiterals)) {
-                                return;
-                            }
-                            if (tryCoverWithSat(combinationLiterals)) {
-                                return;
-                            }
-                            newConfiguration(combinationLiterals);
-                        } finally {
-                            candidateConfiguration.clear();
-                            newConfiguration = null;
-                        }
-                    });
+            CombinationStream.stream(literals.shuffle(random).get(), t).forEach(combination -> {
+                int[] combinationLiterals = combination.select();
+                checkCancel();
+                monitor.incrementCurrentStep();
+                if (isCovered(combinationLiterals, currentSampleIndices)) {
+                    return;
+                }
+                if (!isCovered(combinationLiterals, bestSampleIndices)) {
+                    return;
+                }
+                try {
+                    if (tryCoverWithoutMIG(combinationLiterals)) {
+                        return;
+                    }
+                    if (tryCoverWithSat(combinationLiterals)) {
+                        return;
+                    }
+                    newConfiguration(combinationLiterals);
+                } finally {
+                    candidateConfiguration.clear();
+                    newConfiguration = null;
+                }
+            });
             setBestSolutionList();
         }
     }
