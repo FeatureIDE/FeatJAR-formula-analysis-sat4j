@@ -20,6 +20,7 @@
  */
 package de.featjar.analysis.sat4j.cli;
 
+import de.featjar.analysis.sat4j.computation.CompactYASA;
 import de.featjar.analysis.sat4j.computation.YASA;
 import de.featjar.base.cli.Option;
 import de.featjar.base.cli.OptionList;
@@ -54,6 +55,9 @@ public class YASACommand extends ATWiseCommand {
             .setDescription("Number of internally cached configurations.")
             .setDefaultValue(65_536);
 
+    public static final Option<Boolean> COMPACT = Option.newFlag("c") //
+            .setDescription("Use a more memory efficient version of YASA.");
+
     public static final Option<Boolean> INCREMENTAL = Option.newFlag("incremental") //
             .setDescription("Start with smaller values for t.");
 
@@ -73,15 +77,28 @@ public class YASACommand extends ATWiseCommand {
     @Override
     public IComputation<BooleanAssignmentList> newTWiseAnalysis(
             OptionList optionParser, IComputation<BooleanAssignmentList> formula) {
-        IComputation<BooleanAssignmentList> analysis = formula.map(YASA::new)
-                .set(
-                        YASA.COMBINATION_SET,
-                        formula.map(VariableCombinationSpecificationComputation::new)
-                                .set(VariableCombinationSpecificationComputation.T, optionParser.get(T_OPTION)))
-                .set(YASA.SAT_TIMEOUT, optionParser.get(SAT_TIMEOUT_OPTION))
-                .set(YASA.ITERATIONS, optionParser.get(ITERATIONS_OPTION))
-                .set(YASA.INTERNAL_SOLUTION_LIMIT, optionParser.get(INTERNAL_SOLUTION_LIMIT))
-                .set(YASA.INCREMENTAL_T, optionParser.get(INCREMENTAL));
+        IComputation<BooleanAssignmentList> analysis;
+        if (optionParser.get(COMPACT)) {
+            analysis = formula.map(CompactYASA::new)
+                    .set(
+                            CompactYASA.COMBINATION_SET,
+                            formula.map(VariableCombinationSpecificationComputation::new)
+                                    .set(VariableCombinationSpecificationComputation.T, optionParser.get(T_OPTION)))
+                    .set(CompactYASA.SAT_TIMEOUT, optionParser.get(SAT_TIMEOUT_OPTION))
+                    .set(CompactYASA.ITERATIONS, optionParser.get(ITERATIONS_OPTION))
+                    .set(CompactYASA.INTERNAL_SOLUTION_LIMIT, optionParser.get(INTERNAL_SOLUTION_LIMIT))
+                    .set(CompactYASA.INCREMENTAL_T, optionParser.get(INCREMENTAL));
+        } else {
+            analysis = formula.map(YASA::new)
+                    .set(
+                            YASA.COMBINATION_SET,
+                            formula.map(VariableCombinationSpecificationComputation::new)
+                                    .set(VariableCombinationSpecificationComputation.T, optionParser.get(T_OPTION)))
+                    .set(YASA.SAT_TIMEOUT, optionParser.get(SAT_TIMEOUT_OPTION))
+                    .set(YASA.ITERATIONS, optionParser.get(ITERATIONS_OPTION))
+                    .set(YASA.INTERNAL_SOLUTION_LIMIT, optionParser.get(INTERNAL_SOLUTION_LIMIT))
+                    .set(YASA.INCREMENTAL_T, optionParser.get(INCREMENTAL));
+        }
 
         Result<Path> consideredInteractionsPath = optionParser.getResult(INCLUDE_INTERACTIONS);
         if (consideredInteractionsPath.isPresent()) {
