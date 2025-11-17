@@ -29,7 +29,6 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.Objects;
 import org.sat4j.core.VecInt;
-import org.sat4j.specs.ContradictionException;
 import org.sat4j.specs.ISolver;
 import org.sat4j.specs.TimeoutException;
 
@@ -91,23 +90,14 @@ public abstract class SAT4JSolver implements de.featjar.analysis.ISolver {
         this.clauseList = new SAT4JClauseList(this, clauseList);
 
         final int size = clauseList.getVariableMap().size();
-        try {
-            if (!clauseList.isEmpty()) {
-                internalSolver.setExpectedNumberOfClauses(clauseList.size() + 1);
+        if (!clauseList.isEmpty()) {
+            internalSolver.setExpectedNumberOfClauses(clauseList.size() + 1);
+        }
+        if (size > 0) {
+            internalSolver.newVar(size);
+            for (int i = 1; i <= size; i++) {
+                internalSolver.registerLiteral(i);
             }
-            if (size > 0) {
-                // due to a bug in SAT4J, each variable must be mentioned at least once
-                // so, add a single pseudo-clause that is tautological and mentions every
-                // variable
-                final VecInt pseudoClause = new VecInt(size + 1);
-                for (int i = 1; i <= size; i++) {
-                    pseudoClause.push(i);
-                }
-                pseudoClause.push(-1);
-                internalSolver.addClause(pseudoClause);
-            }
-        } catch (ContradictionException ignored) {
-            trivialContradictionFound = true;
         }
     }
 
