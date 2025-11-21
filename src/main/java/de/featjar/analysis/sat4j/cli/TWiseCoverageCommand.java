@@ -34,7 +34,7 @@ import de.featjar.base.log.Log.Verbosity;
 import de.featjar.formula.CoverageStatistic;
 import de.featjar.formula.assignment.BooleanAssignmentGroups;
 import de.featjar.formula.assignment.BooleanAssignmentList;
-import de.featjar.formula.assignment.ComputeBooleanClauseList;
+import de.featjar.formula.assignment.conversion.ComputeBooleanClauseList;
 import de.featjar.formula.combination.VariableCombinationSpecification.VariableCombinationSpecificationComputation;
 import de.featjar.formula.computation.AComputeTWiseCoverage;
 import de.featjar.formula.computation.ComputeAbsoluteTWiseCoverage;

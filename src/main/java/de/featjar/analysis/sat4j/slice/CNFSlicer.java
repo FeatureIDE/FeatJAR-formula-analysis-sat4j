@@ -30,6 +30,7 @@ import de.featjar.base.data.Result;
 import de.featjar.formula.assignment.BooleanAssignment;
 import de.featjar.formula.assignment.BooleanAssignmentList;
 import de.featjar.formula.assignment.BooleanClause;
+import de.featjar.formula.assignment.conversion.BooleanAssignmentListToVariables;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
