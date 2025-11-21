@@ -48,7 +48,9 @@ import java.util.stream.Collectors;
 public class CNFSlicer extends AComputation<BooleanAssignmentList> {
     protected static final Dependency<BooleanAssignmentList> CNF =
             Dependency.newDependency(BooleanAssignmentList.class);
-    public static final Dependency<BooleanAssignment> VARIABLES_OF_INTEREST =
+    public static final Dependency<BooleanAssignment> VARIABLES_TO_KEEP =
+            Dependency.newDependency(BooleanAssignment.class);
+    public static final Dependency<BooleanAssignment> VARIABLES_TO_REMOVE =
             Dependency.newDependency(BooleanAssignment.class);
 
     protected static final Comparator<BooleanAssignment> lengthComparator =
@@ -81,7 +83,10 @@ public class CNFSlicer extends AComputation<BooleanAssignmentList> {
     protected int newDirtyListDelIndex = 0;
 
     public CNFSlicer(IComputation<BooleanAssignmentList> clauseList) {
-        super(clauseList, new ComputeConstant<>(new BooleanAssignment()));
+        super(
+                clauseList,
+                new BooleanAssignmentListToVariables(clauseList),
+                new ComputeConstant<>(new BooleanAssignment()));
     }
 
     int cr = 0, cnr = 0, dr = 0, dnr = 0;
@@ -89,7 +94,10 @@ public class CNFSlicer extends AComputation<BooleanAssignmentList> {
     @Override
     public Result<BooleanAssignmentList> compute(List<Object> dependencyList, Progress progress) {
         orgCNF = CNF.get(dependencyList);
-        dirtyVariables = VARIABLES_OF_INTEREST.get(dependencyList);
+        BooleanAssignment inlcude = VARIABLES_TO_KEEP.get(dependencyList);
+        BooleanAssignment exclude = VARIABLES_TO_REMOVE.get(dependencyList);
+
+        dirtyVariables = inlcude.removeAll(exclude);
 
         cnfCopy = new BooleanAssignmentList(orgCNF.getVariableMap());
 

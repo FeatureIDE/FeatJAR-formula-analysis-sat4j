@@ -124,7 +124,7 @@ public class ProjectionCommand extends ACommand {
 
         IComputation<BooleanAssignmentList> computation = Computations.of(cnf)
                 .map(CNFSlicer::new)
-                .set(CNFSlicer.VARIABLES_OF_INTEREST, new BooleanAssignment(array));
+                .set(CNFSlicer.VARIABLES_TO_REMOVE, new BooleanAssignment(array));
 
         Result<BooleanAssignmentList> result;
 
