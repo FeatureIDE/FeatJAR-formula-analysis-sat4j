@@ -31,6 +31,7 @@ import de.featjar.base.data.Result;
 import de.featjar.formula.assignment.BooleanAssignment;
 import de.featjar.formula.assignment.BooleanAssignmentList;
 import de.featjar.formula.assignment.BooleanClause;
+import de.featjar.formula.assignment.conversion.BooleanAssignmentListToBooleanAssignment;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,7 +51,7 @@ public class MIGBuilder extends AComputation<ModalImplicationGraph> {
     public static final Dependency<BooleanAssignment> CORE = Dependency.newDependency(BooleanAssignment.class);
 
     public MIGBuilder(IComputation<BooleanAssignmentList> cnfFormula) {
-        super(cnfFormula, new ComputeCoreSAT4J(cnfFormula));
+        super(cnfFormula, new ComputeCoreSAT4J(cnfFormula).map(BooleanAssignmentListToBooleanAssignment::new));
     }
 
     protected MIGBuilder(MIGBuilder other) {

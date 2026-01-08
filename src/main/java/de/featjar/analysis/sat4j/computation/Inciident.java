@@ -199,7 +199,7 @@ public class Inciident extends ASAT4JAnalysis.Solution<BooleanAssignment> {
                         .filter(l -> l != 0)
                         .filter(l -> failingConfs.size(l) == failingConfs.size())
                         .toArray())
-                .removeAll(mig.getCore());
+                .removeAllInts(mig.getCore());
 
         if (commonLiterals.length < t) {
             return List.of(commonLiterals);

@@ -52,7 +52,7 @@ public class RandomConfigurationUpdater implements IConfigurationUpdater {
                 .map(ComputeCoreSAT4J::new)
                 .set(ComputeCoreSAT4J.ASSUMED_ASSIGNMENT, partialSolution)
                 .computeResult()
-                .map(a -> a.toSolution(model.getVariableMap().size()));
+                .map(a -> a.getFirst().toSolution(model.getVariableMap().size()));
     }
 
     @Override
@@ -77,7 +77,7 @@ public class RandomConfigurationUpdater implements IConfigurationUpdater {
             }
 
             ll.add(new BooleanClause(newNegativeLiterals));
-            ll.add(new BooleanClause(IntegerList.mergeInt(choose)).inverse());
+            ll.add(new BooleanClause(IntegerList.mergeInt(choose)).negate());
         }
         if (include != null) {
             int[] includeMerge = IntegerList.mergeInt(include);
@@ -87,7 +87,7 @@ public class RandomConfigurationUpdater implements IConfigurationUpdater {
         }
         if (exclude != null) {
             for (int[] clause : exclude) {
-                ll.add(new BooleanClause(clause).inverse());
+                ll.add(new BooleanClause(clause).negate());
             }
         }
 

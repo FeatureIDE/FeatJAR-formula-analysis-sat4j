@@ -97,7 +97,10 @@ public class CNFSlicer extends AComputation<BooleanAssignmentList> {
         BooleanAssignment inlcude = VARIABLES_TO_KEEP.get(dependencyList);
         BooleanAssignment exclude = VARIABLES_TO_REMOVE.get(dependencyList);
 
-        dirtyVariables = inlcude.removeAll(exclude);
+        dirtyVariables = orgCNF.getVariableMap()
+                .getVariables()
+                .removeAll(
+                        inlcude.removeAllVariables(exclude.getAbsoluteValues()).getAbsoluteValues());
 
         cnfCopy = new BooleanAssignmentList(orgCNF.getVariableMap());
 
@@ -288,7 +291,7 @@ public class CNFSlicer extends AComputation<BooleanAssignmentList> {
     }
 
     protected final boolean isRedundant(SAT4JSolutionSolver solver, BooleanClause clause) {
-        return solver.hasSolution(clause.negate()).valueEquals(Boolean.FALSE);
+        return solver.hasSolution(clause.negateInts()).valueEquals(Boolean.FALSE);
     }
 
     protected void detectRedundancy(DirtyFeature nextFeature) {

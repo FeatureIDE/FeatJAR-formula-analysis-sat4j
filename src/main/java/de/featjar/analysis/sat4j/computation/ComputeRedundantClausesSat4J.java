@@ -58,7 +58,7 @@ public class ComputeRedundantClausesSat4J extends ASAT4JAnalysis.Solution<Boolea
         for (BooleanAssignment clause : clauseList) {
             checkCancel();
 
-            solver.getClauseList().add(clause.inverse());
+            solver.getClauseList().add(clause.negate());
             if (solver.isTrivialContradictionFound()) {
                 solver.getClauseList().remove();
                 result.add(clause);

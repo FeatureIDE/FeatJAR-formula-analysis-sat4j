@@ -31,7 +31,6 @@ import de.featjar.analysis.sat4j.computation.ComputeAtomicSetsSAT4J;
 import de.featjar.analysis.sat4j.computation.ComputeCoreSAT4J;
 import de.featjar.analysis.sat4j.computation.ComputeSatisfiableSAT4J;
 import de.featjar.analysis.sat4j.computation.ComputeSolutionSAT4J;
-import de.featjar.formula.assignment.BooleanAssignment;
 import de.featjar.formula.assignment.BooleanAssignmentList;
 import de.featjar.formula.assignment.BooleanSolution;
 import de.featjar.formula.assignment.conversion.ComputeBooleanClauseList;
@@ -49,7 +48,7 @@ public class Sat4JAnalysesTest extends AnalysisTest {
                 .map(ComputeBooleanClauseList::new);
 
         BooleanSolution solution = await(cnf.map(ComputeSolutionSAT4J::new));
-        BooleanAssignment core = await(cnf.map(ComputeCoreSAT4J::new));
+        BooleanAssignmentList core = await(cnf.map(ComputeCoreSAT4J::new));
         BooleanAssignmentList atomicSets = await(cnf.map(ComputeAtomicSetsSAT4J::new));
         assertNotNull(solution);
         assertNotNull(core);

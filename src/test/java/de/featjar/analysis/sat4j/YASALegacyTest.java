@@ -34,6 +34,7 @@ import de.featjar.analysis.sat4j.computation.YASALegacy;
 import de.featjar.analysis.sat4j.solver.ISelectionStrategy;
 import de.featjar.base.FeatJAR;
 import de.featjar.base.computation.Computations;
+import de.featjar.base.computation.ComputeConstant;
 import de.featjar.base.computation.IComputation;
 import de.featjar.formula.CoverageStatistic;
 import de.featjar.formula.VariableMap;
@@ -241,15 +242,16 @@ public class YASALegacyTest extends Common {
         VariableMap variableMap = cnf.getVariableMap();
         BooleanAssignment variables = variableMap.getVariables();
 
-        BooleanAssignment core = Computations.of(cnf).map(ComputeCoreSAT4J::new).compute();
+        BooleanAssignmentList core =
+                Computations.of(cnf).map(ComputeCoreSAT4J::new).compute();
         BooleanAssignment atomic =
                 new BooleanAssignment(Computations.of(cnf).map(ComputeAtomicSetsSAT4J::new).compute().stream()
                         .skip(1)
                         .flatMapToInt(l -> Arrays.stream(l.get(), 1, l.get().length))
                         .toArray());
 
-        CoverageStatistic statisticNone = Computations.of(sample)
-                .map(ComputeConstraintedTWiseCoverage::new)
+        ComputeConstant<BooleanAssignmentList> of = Computations.of(sample);
+        CoverageStatistic statisticNone = of.map(ComputeConstraintedTWiseCoverage::new)
                 .set(ComputeConstraintedTWiseCoverage.BOOLEAN_CLAUSE_LIST, clauses)
                 .set(
                         ComputeConstraintedTWiseCoverage.COMBINATION_SET,
@@ -257,29 +259,26 @@ public class YASALegacyTest extends Common {
                                 .set(VariableCombinationSpecificationComputation.T, t))
                 .compute();
 
-        CoverageStatistic statisticCore = Computations.of(sample)
-                .map(ComputeConstraintedTWiseCoverage::new)
+        CoverageStatistic statisticCore = of.map(ComputeConstraintedTWiseCoverage::new)
                 .set(ComputeConstraintedTWiseCoverage.BOOLEAN_CLAUSE_LIST, clauses)
                 .set(
                         ComputeConstraintedTWiseCoverage.COMBINATION_SET,
-                        new VariableCombinationSpecification(t, variables.removeAll(core), variableMap))
+                        new VariableCombinationSpecification(t, variables.removeAll(core.getFirst()), variableMap))
                 .compute();
 
-        CoverageStatistic statisticAtomic = Computations.of(sample)
-                .map(ComputeConstraintedTWiseCoverage::new)
+        CoverageStatistic statisticAtomic = of.map(ComputeConstraintedTWiseCoverage::new)
                 .set(ComputeConstraintedTWiseCoverage.BOOLEAN_CLAUSE_LIST, clauses)
                 .set(
                         ComputeConstraintedTWiseCoverage.COMBINATION_SET,
                         new VariableCombinationSpecification(t, variables.removeAll(atomic), variableMap))
                 .compute();
 
-        CoverageStatistic statisticCoreAtomic = Computations.of(sample)
-                .map(ComputeConstraintedTWiseCoverage::new)
+        CoverageStatistic statisticCoreAtomic = of.map(ComputeConstraintedTWiseCoverage::new)
                 .set(ComputeConstraintedTWiseCoverage.BOOLEAN_CLAUSE_LIST, clauses)
                 .set(
                         ComputeConstraintedTWiseCoverage.COMBINATION_SET,
                         new VariableCombinationSpecification(
-                                t, variables.removeAll(core).removeAll(atomic), variableMap))
+                                t, variables.removeAll(core.getFirst()).removeAll(atomic), variableMap))
                 .compute();
         FeatJAR.log().info("Coverage statisticNone: %f", statisticNone.coverage());
         FeatJAR.log().info("Coverage statisticCore: %f", statisticCore.coverage());

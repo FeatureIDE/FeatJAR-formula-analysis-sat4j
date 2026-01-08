@@ -88,7 +88,7 @@ public class ComputeSolutionsSAT4J extends ASAT4JAnalysis.Solution<BooleanAssign
             }
             solutionList.add(solution.get());
             if (forbid) {
-                solver.getClauseList().add(solution.get().toClause().inverse());
+                solver.getClauseList().add(solution.get().toClause().negate());
             }
             if (strategy == Strategy.FAST_RANDOM) {
                 solver.shuffleOrder(random);

@@ -67,7 +67,7 @@ public class ComputeIndeterminateSat4J extends ASAT4JAnalysis.Solution<BooleanAs
         for (final int variable : variables.get()) {
             BooleanAssignmentList modClauseList = new BooleanAssignmentList(clauseList.getVariableMap());
             for (final BooleanAssignment clause : clauseList) {
-                final int[] newLiterals = clause.removeAllVariables(variable);
+                final int[] newLiterals = clause.removeAllVariablesInts(variable);
                 if (newLiterals.length > 0) {
                     modClauseList.add(new BooleanClause(newLiterals));
                 } else {

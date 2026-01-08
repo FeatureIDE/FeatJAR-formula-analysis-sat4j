@@ -265,8 +265,8 @@ public class YASALegacy extends ASAT4JAnalysis<BooleanAssignmentList> {
         mig = MIG.get(dependencyList);
 
         t = T.get(dependencyList);
-        BooleanAssignment filteredVariables = new BooleanAssignment(variables.removeAllVariables(
-                Arrays.stream(mig.getCore()).map(Math::abs).toArray()));
+        BooleanAssignment filteredVariables = variables.removeAllVariables(
+                Arrays.stream(mig.getCore()).map(Math::abs).toArray());
         literals = new BooleanAssignment(filteredVariables.addAll(filteredVariables.negate()));
 
         progress.setTotalSteps(iterations * BinomialCalculator.computeBinomial(literals.size(), t));

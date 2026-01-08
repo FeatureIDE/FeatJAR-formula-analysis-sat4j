@@ -40,7 +40,7 @@ import java.util.Random;
  *
  * @author Sebastian Krieter
  */
-public class ComputeCoreSAT4J extends ASAT4JAnalysis.Solution<BooleanAssignment> {
+public class ComputeCoreSAT4J extends ASAT4JAnalysis.Solution<BooleanAssignmentList> {
     protected static final Dependency<BooleanAssignment> VARIABLES_OF_INTEREST =
             Dependency.newDependency(BooleanAssignment.class);
 
@@ -53,7 +53,7 @@ public class ComputeCoreSAT4J extends ASAT4JAnalysis.Solution<BooleanAssignment>
     }
 
     @Override
-    public Result<BooleanAssignment> compute(List<Object> dependencyList, Progress progress) {
+    public Result<BooleanAssignmentList> compute(List<Object> dependencyList, Progress progress) {
         SAT4JSolutionSolver solver = createSolver(dependencyList);
         Random random = new Random(RANDOM_SEED.get(dependencyList));
         BooleanAssignment variablesOfInterest = VARIABLES_OF_INTEREST.get(dependencyList);
@@ -68,7 +68,7 @@ public class ComputeCoreSAT4J extends ASAT4JAnalysis.Solution<BooleanAssignment>
         if (hasSolution.isEmpty()) {
             return hasSolution.nullify();
         } else if (hasSolution.valueEquals(Boolean.FALSE)) {
-            return Result.of(new BooleanAssignment());
+            return Result.of(new BooleanAssignmentList(variableMap));
         }
         int[] potentialCore = Arrays.copyOf(solver.getInternalSolution(), variableCount);
 
@@ -112,6 +112,7 @@ public class ComputeCoreSAT4J extends ASAT4JAnalysis.Solution<BooleanAssignment>
             }
         }
 
-        return solver.createResult(solver.getAssignment().toAssignment());
+        return solver.createResult(
+                new BooleanAssignmentList(variableMap, solver.getAssignment().toAssignment()));
     }
 }
