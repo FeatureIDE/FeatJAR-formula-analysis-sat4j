@@ -50,10 +50,10 @@ public class SolutionsCommand extends ASAT4JAnalysisCommand<BooleanAssignmentGro
     /**
      * Strategy to use for generating each configuration (%s).
      */
-    public static final Option<ISelectionStrategy.Strategy> SELECTION_STRATEGY_OPTION = Option.newEnumOption(
-                    "strategy", ISelectionStrategy.Strategy.class) //
-            .setDescription("Strategy to use for generating each configuration.") //
-            .setDefaultValue(ISelectionStrategy.Strategy.ORIGINAL);
+    public static final Option<ISelectionStrategy.NonParameterStrategy> SELECTION_STRATEGY_OPTION =
+            Option.newEnumOption("strategy", ISelectionStrategy.NonParameterStrategy.class) //
+                    .setDescription("Strategy to use for generating each configuration.") //
+                    .setDefaultValue(ISelectionStrategy.NonParameterStrategy.ORIGINAL);
 
     /**
      * Forbid duplicate configurations to be generated.

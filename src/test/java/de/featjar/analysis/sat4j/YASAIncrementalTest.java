@@ -168,7 +168,7 @@ public class YASAIncrementalTest extends Common {
 
     private BooleanAssignmentList computeRandomSample(IComputation<BooleanAssignmentList> clauses, int size) {
         BooleanAssignmentList sample = clauses.map(ComputeSolutionsSAT4J::new)
-                .set(ComputeSolutionsSAT4J.SELECTION_STRATEGY, ISelectionStrategy.Strategy.FAST_RANDOM)
+                .set(ComputeSolutionsSAT4J.SELECTION_STRATEGY, ISelectionStrategy.NonParameterStrategy.FAST_RANDOM)
                 .set(ComputeSolutionsSAT4J.LIMIT, size)
                 .set(ComputeSolutionsSAT4J.RANDOM_SEED, 1L)
                 .compute();

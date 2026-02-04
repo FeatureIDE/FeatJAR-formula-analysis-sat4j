@@ -22,7 +22,7 @@ package de.featjar.analysis.sat4j.computation;
 
 import de.featjar.analysis.RuntimeTimeoutException;
 import de.featjar.analysis.sat4j.solver.ISelectionStrategy;
-import de.featjar.analysis.sat4j.solver.ISelectionStrategy.Strategy;
+import de.featjar.analysis.sat4j.solver.ISelectionStrategy.NonParameterStrategy;
 import de.featjar.analysis.sat4j.solver.SAT4JAssignment;
 import de.featjar.analysis.sat4j.solver.SAT4JSolutionSolver;
 import de.featjar.analysis.sat4j.solver.SAT4JSolver;
@@ -58,8 +58,8 @@ public class ComputeCompleteSample extends AComputation<BooleanAssignmentList> {
             Dependency.newDependency(BooleanAssignmentList.class);
     public static final Dependency<Duration> SAT_TIMEOUT = Dependency.newDependency(Duration.class);
 
-    public static final Dependency<ISelectionStrategy.Strategy> SELECTION_STRATEGY =
-            Dependency.newDependency(ISelectionStrategy.Strategy.class);
+    public static final Dependency<ISelectionStrategy.NonParameterStrategy> SELECTION_STRATEGY =
+            Dependency.newDependency(ISelectionStrategy.NonParameterStrategy.class);
 
     public static final Dependency<Long> RANDOM_SEED = Dependency.newDependency(Long.class);
 
@@ -70,7 +70,7 @@ public class ComputeCompleteSample extends AComputation<BooleanAssignmentList> {
                 Computations.of(new BooleanAssignment()),
                 Computations.of(new BooleanAssignmentList(null, 0)),
                 Computations.of(Duration.ZERO),
-                Computations.of(ISelectionStrategy.Strategy.FAST_RANDOM),
+                Computations.of(ISelectionStrategy.NonParameterStrategy.FAST_RANDOM),
                 Computations.of(1));
     }
 
@@ -95,7 +95,7 @@ public class ComputeCompleteSample extends AComputation<BooleanAssignmentList> {
         SAT4JSolutionSolver solver = new SAT4JSolutionSolver(clauseList);
         SAT4JSolver.initializeSolver(solver, clauseList, assumedAssignment, assumedClauseList, timeout);
 
-        final Strategy strategy = SELECTION_STRATEGY.get(dependencyList);
+        final NonParameterStrategy strategy = SELECTION_STRATEGY.get(dependencyList);
         switch (strategy) {
             case FAST_RANDOM:
                 solver.setSelectionStrategy(ISelectionStrategy.random(random));
@@ -127,7 +127,7 @@ public class ComputeCompleteSample extends AComputation<BooleanAssignmentList> {
                 Result<BooleanSolution> hasSolution = solver.findSolution();
                 if (hasSolution.isPresent()) {
                     completeSample.add(new BooleanSolution(hasSolution.get()));
-                    if (strategy == Strategy.FAST_RANDOM) {
+                    if (strategy == NonParameterStrategy.FAST_RANDOM) {
                         solver.shuffleOrder(random);
                     }
                 } else {

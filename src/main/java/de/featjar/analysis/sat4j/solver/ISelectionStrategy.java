@@ -24,6 +24,13 @@ import java.util.Random;
 
 public interface ISelectionStrategy {
 
+    enum NonParameterStrategy {
+        ORIGINAL,
+        NEGATIVE,
+        POSITIVE,
+        FAST_RANDOM,
+    }
+
     enum Strategy {
         ORIGINAL,
         NEGATIVE,

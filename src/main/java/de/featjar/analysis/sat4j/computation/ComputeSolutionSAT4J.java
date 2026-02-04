@@ -21,7 +21,7 @@
 package de.featjar.analysis.sat4j.computation;
 
 import de.featjar.analysis.sat4j.solver.ISelectionStrategy;
-import de.featjar.analysis.sat4j.solver.ISelectionStrategy.Strategy;
+import de.featjar.analysis.sat4j.solver.ISelectionStrategy.NonParameterStrategy;
 import de.featjar.analysis.sat4j.solver.SAT4JSolutionSolver;
 import de.featjar.base.computation.Computations;
 import de.featjar.base.computation.Dependency;
@@ -35,11 +35,11 @@ import java.util.Random;
 
 public class ComputeSolutionSAT4J extends ASAT4JAnalysis.Solution<BooleanSolution> {
 
-    public static final Dependency<ISelectionStrategy.Strategy> SELECTION_STRATEGY =
-            Dependency.newDependency(ISelectionStrategy.Strategy.class);
+    public static final Dependency<ISelectionStrategy.NonParameterStrategy> SELECTION_STRATEGY =
+            Dependency.newDependency(ISelectionStrategy.NonParameterStrategy.class);
 
     public ComputeSolutionSAT4J(IComputation<BooleanAssignmentList> clauseList) {
-        super(clauseList, Computations.of(ISelectionStrategy.Strategy.ORIGINAL));
+        super(clauseList, Computations.of(ISelectionStrategy.NonParameterStrategy.ORIGINAL));
     }
 
     protected ComputeSolutionSAT4J(ComputeSolutionSAT4J other) {
@@ -49,7 +49,7 @@ public class ComputeSolutionSAT4J extends ASAT4JAnalysis.Solution<BooleanSolutio
     @Override
     public Result<BooleanSolution> compute(List<Object> dependencyList, Progress progress) {
         SAT4JSolutionSolver solver = (SAT4JSolutionSolver) createSolver(dependencyList);
-        final Strategy strategy = SELECTION_STRATEGY.get(dependencyList);
+        final NonParameterStrategy strategy = SELECTION_STRATEGY.get(dependencyList);
         switch (strategy) {
             case FAST_RANDOM:
                 Random random = new Random(RANDOM_SEED.get(dependencyList));
